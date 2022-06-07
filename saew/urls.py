@@ -20,6 +20,7 @@ from pull_tweets import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name='index')
-    # path('pull_tweets/view_tweets', views.view_tweets, name='view_tweets')
+    path('', views.index, name='index'),
+    path('multi_analysis', views.multi_analysis, name='multi_analysis'),
+    path('single_analysis', views.single_analysis, name='single_analysis')
 ]

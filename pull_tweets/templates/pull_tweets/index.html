@@ -1,9 +1,12 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>SAEW</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.0.1/js/anychart-core.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.0.1/js/anychart-pie.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -19,35 +22,42 @@
                 <label for="hashtag" class="form-label">Hashtag</label><br>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">#</span>
-                    <input type="text" class="form-control" id="hashtag" placeholder="birthday">
+                    <input type="text" class="form-control" id="hashtag" autocomplete="off">
                 </div>
                 <label for="user" class="form-label">Użytkownik</label>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon2">@</span>
-                    <input type="text" class="form-control" id="user" placeholder="elonmusk">
+                    <input type="text" class="form-control" id="user" autocomplete="off">
                 </div>
 
                 <div class="mb-3">
                     <label for="count" class="form-label">Ilość</label>
                     <input type="range" class="form-range" min="10" max="100" id="count"
-                           oninput="this.nextElementSibling.value = this.value" value="10">
+                           oninput="this.nextElementSibling.value = this.value" value="10", autocomplete="off">
                     <output>10</output>
                 </div>
                 <button type="submit" class="btn btn-primary">Wyszukaj tweety</button>
             </form>
             <hr>
-            <h4 id="analysis_title"></h4>
-            <p id="hashtag_result"></p>
-            <p id="user_result"></p>
-            <p id="count_result"></p>
+            <!--            <h4 id="analysis_title"></h4>-->
+            <!--            <p id="hashtag_result"></p>-->
+            <!--            <p id="user_result"></p>-->
+            <!--            <p id="count_result"></p>-->
+            <div id="chartDiv" style="width: 100%; height: 100%"></div>
         </div>
         <div class="col">
             <h4>Analiza własnego tekstu</h4>
             <hr>
             <form id="ownTextForm">
-
+                <div class="mb-3">
+                    <label for="ownTextField" class="form-label">Wpis do analizy</label>
+                    <textarea class="form-control" id="ownTextField" rows="3" autocomplete="off"></textarea>
+                </div>
                 <button type="submit" class="btn btn-primary">Analizuj tekst</button>
             </form>
+            <hr>
+            <h4 id="analysisResultTitle"></h4>
+            <h3 id="analysisResult"></h3>
         </div>
     </div>
 </div>
@@ -70,8 +80,10 @@
       console.log(formData.user);
       console.log(formData.count);
 
+      $('#chartDiv').html("");
+
      $.ajax({
-        url: "/",
+        url: "/multi_analysis",
         type: "POST",
         data: JSON.stringify({payload: formData,}),
         headers: {
@@ -80,10 +92,38 @@
         },
         success: (data) => {
           console.log(data);
-          $('#hashtag_result').html(data.hashtag);
-          $('#user_result').html(data.user);
-          $('#count_result').html(data.count);
-          $('#analysis_title').html("Tweety wyszukane, analiza już wkrótce");
+
+          //$('#hashtag_result').html(data.hashtag);
+          //$('#user_result').html(data.user);
+          //$('#count_result').html(data.count);
+          //$('#analysis_title').html("Tweety wyszukane, analiza już wkrótce");
+
+          var data = [
+                {x: "Radość", value: data.joy, normal:  {fill: "#f2d05a"}},
+                {x: "Smutek", value: data.sadness, normal:  {fill: "#51d8d6"}},
+                {x: "Strach", value: data.fear, normal:  {fill: "#1dca64"}},
+                {x: "Zaskoczenie", value: data.surprise, normal:  {fill: "#3476f9"}},
+                {x: "Obrzydzenie", value: data.disgust, normal:  {fill: "#ad74f5"}},
+                {x: "Gniew", value: data.anger, normal:  {fill: "#f96666"}},
+          ];
+          // create the chart
+          var chart = anychart.pie();
+
+            // set the chart title
+            chart.title("Rozkład emocji w wyszukanych tweetach");
+
+            // add the data
+            chart.data(data);
+            // set legend position
+            chart.legend().position("right");
+            // set items layout
+            chart.legend().itemsLayout("vertical");
+            chart.sort("desc");
+
+            // display the chart in the container
+            chart.container('chartDiv');
+            chart.draw();
+
         },
         error: (error) => {
           console.log(error);
@@ -91,6 +131,46 @@
       });
 
     });
+
+
+
+        $("#ownTextForm").on('submit', (e) => {
+      // prevent page reload
+      e.preventDefault();
+      // get the values from the form fields
+      const formData = {
+        text: ownTextForm.elements["ownTextField"].value,
+      }
+      console.log(formData.text);
+
+      $('#analysisResultTitle').html("");
+      $('#analysisResult').html("");
+
+     $.ajax({
+        url: "/single_analysis",
+        type: "POST",
+        data: JSON.stringify({payload: formData,}),
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        success: (data) => {
+          console.log(data);
+          $('#analysisResultTitle').html("Wynik analizy:");
+          $('#analysisResult').html(data.result);
+
+        },
+        error: (error) => {
+          console.log(error);
+        }
+      });
+
+    });
+
+
+
+
+
   });
 
 function getCookie(name) {
@@ -108,6 +188,11 @@ function getCookie(name) {
   }
   return cookieValue;
 }
+
+
+
+
+
 
 
 

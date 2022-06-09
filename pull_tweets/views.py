@@ -25,7 +25,7 @@ outputs = {
     4: "Smutek",
     5: "Zaskoczenie"
 }
-
+dataset_name = 'combined_L8_H512'
 
 def index(request):
     return render(request, 'pull_tweets/index.html')
@@ -61,7 +61,6 @@ def multi_analysis(request):
         tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'],
                                              max_results=count)
 
-        dataset_name = 'combined'
         saved_model_path = './{}_bert'.format(dataset_name.replace('/', '_'))
 
         reloaded_model = tf.saved_model.load(saved_model_path)
@@ -91,7 +90,6 @@ def single_analysis(request):
     text = payload['text']
 
     if text:
-        dataset_name = 'combined'
         saved_model_path = './{}_bert'.format(dataset_name.replace('/', '_'))
 
         reloaded_model = tf.saved_model.load(saved_model_path)

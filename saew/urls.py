@@ -15,12 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views.generic.base import RedirectView
 from pull_tweets import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('multi_analysis', views.multi_analysis, name='multi_analysis'),
-    path('single_analysis', views.single_analysis, name='single_analysis')
+    path('single_analysis', views.single_analysis, name='single_analysis'),
+    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico')))
 ]
